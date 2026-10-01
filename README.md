@@ -112,6 +112,7 @@ This runs `csc.exe` from `%WINDIR%\Microsoft.NET\Framework64\v4.0.30319` and pro
 | `SimpleMacFan.cs` | All the source code (SMC access, fan logic, user interface). |
 | `app.manifest` | Requests administrator rights and declares Windows 10 compatibility. |
 | `build.cmd` | Build script. |
+| `LICENSE` | GNU General Public License v3.0. |
 | `SimpleMacFan.exe` | The compiled application. |
 
 ## How it works
@@ -159,14 +160,24 @@ fixed-point number (raw ÷ 256 = °C). Both are big-endian.
    `schtasks /Delete /TN SimpleMacFan /F` from an administrator command prompt.
 3. Delete the program folder and `%APPDATA%\SimpleMacFan`.
 
-## Copyright and disclaimer
+## License
 
-Copyright © 2026 ozaretskyi (ozaretskyi@proton.me). All rights reserved.
+Copyright © 2026 ozaretskyi (ozaretskyi@proton.me)
 
-This software is provided "as is", without warranty of any kind, express or implied.
+SimpleMacFan is free software: you can redistribute it and/or modify it under the terms
+of the **GNU General Public License version 3** or (at your option) any later version, as
+published by the Free Software Foundation. See the [LICENSE](LICENSE) file for the full text.
+
+In short: you may use, study, modify and share this program, including commercially. If you
+distribute it or a modified version, you must make the source code available under the same
+license and keep the copyright and license notices.
+
+## Disclaimer
+
+This program is distributed in the hope that it will be useful, but **WITHOUT ANY WARRANTY**;
+without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 Controlling fan speeds, especially in the forced modes, can cause overheating and hardware
-damage if misused. Use it at your own risk. The author is not liable for any damage
-resulting from its use.
+damage if misused. Use it at your own risk.
 
 Apple, Mac, iMac and Boot Camp are trademarks of Apple Inc., registered in the U.S. and
 other countries. SimpleMacFan is an independent project and is not affiliated with,
