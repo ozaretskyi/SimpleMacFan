@@ -253,7 +253,7 @@ namespace SimpleMacFan
         const string HotterCpuGpu = "CPU+GPU";
         const int MaxStepDown = 150; // rpm per tick, so fans slow down smoothly
         const string ForceKey = "FS! ";
-        const double SafetyTripC = 85, SafetyResetC = 75;
+        const double SafetyTripC = 85, GpuTripC = 90, SafetyHysteresisC = 10;
 
         static readonly string[][] KnownSensors =
         {
@@ -636,45 +636,66 @@ namespace SimpleMacFan
             }
         }
 
+        // The mobile Radeon GPUs in these Macs are designed to run hotter than the CPU.
+        double TripLimit(string key)
+        {
+            return key == gpuKey ? GpuTripC : SafetyTripC;
+        }
+
         // Hands every forced fan back to the SMC while a critical sensor is hot or unreadable.
+        // A sensor trips at its limit; forced control resumes once every sensor is
+        // SafetyHysteresisC below its limit.
         void UpdateSafety()
         {
-            double hottest = 0;
-            string hottestKey = null;
-            bool unreadable = false;
+            bool unreadable = false, overLimit = false, cooledDown = true;
+            double worstMargin = double.MinValue, worstTemp = 0;
+            string worstKey = null;
             foreach (var key in safetyKeys)
             {
                 double t = Temp(key);
                 if (double.IsNaN(t))
-                    unreadable = true;
-                else if (t > hottest)
                 {
-                    hottest = t;
-                    hottestKey = key;
+                    unreadable = true;
+                    continue;
+                }
+                double margin = t - TripLimit(key);
+                overLimit |= margin >= 0;
+                cooledDown &= margin < -SafetyHysteresisC;
+                if (margin > worstMargin)
+                {
+                    worstMargin = margin;
+                    worstTemp = t;
+                    worstKey = key;
                 }
             }
 
             bool wasTripped = safetyTripped;
-            if (unreadable || hottest >= SafetyTripC)
+            if (unreadable || overLimit)
                 safetyTripped = true;
-            else if (hottest < SafetyResetC)
+            else if (cooledDown)
                 safetyTripped = false;
 
             bool anyForced = false;
             foreach (var fan in fans)
                 anyForced |= fan.IsForced;
+
             if (safetyTripped && anyForced)
             {
+                string message = unreadable
+                    ? "A temperature sensor is unreadable. Forced fans are handed back to the Mac."
+                    : string.Format("{0} at {1}. Forced fans are handed back to the Mac until it is below {2}°C.",
+                                    SensorName(worstKey), FormatTemp(worstTemp), TripLimit(worstKey) - SafetyHysteresisC);
                 status.ForeColor = Color.Firebrick;
-                status.Text = unreadable
-                    ? "Safety: a sensor is unreadable, forced fans handed back to the Mac."
-                    : string.Format("Safety: {0} at {1}, forced fans handed back to the Mac until below {2}°C.",
-                                    SensorName(hottestKey), FormatTemp(hottest), SafetyResetC);
+                status.Text = "Safety: " + message;
+                if (!wasTripped)
+                    tray.ShowBalloonTip(5000, AppName + " safety cut-out", message, ToolTipIcon.Warning);
             }
             else if (wasTripped && !safetyTripped || status.ForeColor == Color.Firebrick)
             {
                 status.ForeColor = SystemColors.GrayText;
                 status.Text = "Fans only ever run faster than Apple's default unless forced. Defaults are restored on exit.";
+                if (wasTripped && !safetyTripped && anyForced)
+                    tray.ShowBalloonTip(4000, AppName, "Temperatures are back to normal. Forced fan control resumed.", ToolTipIcon.Info);
             }
         }
 

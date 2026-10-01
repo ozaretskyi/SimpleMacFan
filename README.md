@@ -35,10 +35,20 @@ Developed and tested on an **iMac12,1 (21.5", Mid 2011)** running Windows 10 22H
   the fan's minimum speed. It never goes below Apple's default minimum or above the fan's
   maximum, and the Mac's own thermal protection stays fully active.
 - In the **forced** modes, the Mac no longer manages that fan. To make up for this, the app
-  watches the CPU, GPU, platform controller hub, memory and power supply sensors. If any
-  reaches **85 °C**, or a sensor can't be read, all forced fans go back to the Mac's control
-  until every watched sensor is below **75 °C**. A red message in the window shows when this
-  happens.
+  runs a safety cut-out that watches these sensors:
+
+  | Sensor | Cut-out at | Forced control resumes below |
+  |---|---|---|
+  | GPU | 90 °C | 80 °C |
+  | CPU, platform controller hub, memory, power supply | 85 °C | 75 °C |
+
+  If any sensor reaches its limit, or a sensor can't be read, all forced fans go back to the
+  Mac's control, which then speeds them up as needed. Forced control resumes only when every
+  watched sensor has cooled to 10 °C below its limit. A tray notification and a red message
+  in the window show when the cut-out starts and ends.
+- Tip: for gaming or other heavy loads, use **Forced, follow sensor** with a range that
+  ends below the cut-out (for example GPU 50 → 78 °C). A fan forced to a fixed low speed
+  can't react to load, so it will reach the cut-out quickly.
 - In *Follow sensor* modes, if the chosen sensor can't be read, the fan goes to full speed.
 - On exit, Windows logoff or shutdown, the app turns off forced mode and restores Apple's
   default minimum speeds.
@@ -150,8 +160,10 @@ fixed-point number (raw ÷ 256 = °C). Both are big-endian.
   drive with an SSD): the SMC can't read a drive temperature and runs that fan at high speed
   to be safe. Use a forced mode, or fit a drive temperature sensor cable such as the OWC
   In-line Digital Thermal Sensor.
-- **Red "Safety" message**: a watched sensor reached 85 °C, so forced fans are back under the
-  Mac's control until everything cools below 75 °C. This is expected under heavy load.
+- **Red "Safety" message or notification**: a watched sensor reached its limit (90 °C for the
+  GPU, 85 °C for the others), so forced fans are back under the Mac's control until everything
+  has cooled 10 °C below its limit. If this happens often, use a *follow sensor* mode whose
+  range ends a few degrees below the limit.
 
 ## Uninstalling
 
