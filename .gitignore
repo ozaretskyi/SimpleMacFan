@@ -1,0 +1,7 @@
+# Build output (attach binaries to a GitHub Release instead)
+*.exe
+*.pdb
+
+# Windows clutter
+Thumbs.db
+desktop.ini
